@@ -1,6 +1,7 @@
 # CoreOS Vagrant
 
-_Modified to support inter-container routing across the cluster._
+* _Modified to support inter-container routing across the cluster._
+* _Modified to acquire new discovery URL automatically._
 
 This repo provides a template Vagrantfile to create a CoreOS virtual machine using the VirtualBox software hypervisor.
 After setup is complete you will have a single CoreOS virtual machine running on your local machine.
