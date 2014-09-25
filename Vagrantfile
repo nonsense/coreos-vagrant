@@ -1,11 +1,12 @@
 # -*- mode: ruby -*-
 # # vi: set ft=ruby :
 
+require 'erb'
 require 'fileutils'
 
 Vagrant.require_version ">= 1.6.0"
 
-CLOUD_CONFIG_PATH = File.join(File.dirname(__FILE__), "user-data")
+DISCOVERY_URL = %x{curl -s https://discovery.etcd.io/new}.chomp
 CONFIG = File.join(File.dirname(__FILE__), "config.rb")
 
 # Defaults for config options defined in CONFIG
@@ -91,8 +92,20 @@ Vagrant.configure("2") do |config|
       # Uncomment below to enable NFS for sharing the host machine into the coreos-vagrant VM.
       #config.vm.synced_folder ".", "/home/core/share", id: "core", :nfs => true, :mount_options => ['nolock,vers=3,udp']
 
-      if File.exist?(CLOUD_CONFIG_PATH)
-        config.vm.provision :file, :source => "#{CLOUD_CONFIG_PATH}", :destination => "/tmp/vagrantfile-user-data"
+      if File.exists?("user-data.erb")
+        discovery_url = DISCOVERY_URL
+        docker_bip_arg = "172.18.#{i+100}.1/24"
+        docker_bip_routes = (1..$num_instances).to_a.reject { |o| o == i }.inject([]) do |routes, o|
+          routes << "172.18.#{o+100}.0/24 via 172.17.8.#{o+100}"
+        end
+
+        cloud_config_path = "#{vm_name}-user-data"
+        erb = ERB.new(File.read("user-data.erb"), 0, "<>-")
+        File.open(cloud_config_path, "w") do |io|
+          io.puts erb.result(binding)
+        end
+
+        config.vm.provision :file, :source => cloud_config_path, :destination => "/tmp/vagrantfile-user-data"
         config.vm.provision :shell, :inline => "mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/", :privileged => true
       end
 

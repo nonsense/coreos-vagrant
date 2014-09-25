@@ -1,5 +1,7 @@
 # CoreOS Vagrant
 
+_Modified to support inter-container routing across the cluster._
+
 This repo provides a template Vagrantfile to create a CoreOS virtual machine using the VirtualBox software hypervisor.
 After setup is complete you will have a single CoreOS virtual machine running on your local machine.
 
@@ -82,7 +84,6 @@ See `config.rb.sample` for more information.
 ## Cluster Setup
 
 Launching a CoreOS cluster on Vagrant is as simple as configuring `$num_instances` in a `config.rb` file to 3 (or more!) and running `vagrant up`.
-Make sure you provide a fresh discovery URL in your `user-data` if you wish to bootstrap etcd in your cluster.
 
 ## New Box Versions
 
