@@ -1,4 +1,4 @@
 .vagrant/
 log/
-user-data.erb
 config.rb
+core-*-user-data
