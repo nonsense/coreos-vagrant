@@ -16,6 +16,9 @@ $enable_serial_logging = false
 $vb_gui = false
 $vb_memory = 1024
 $vb_cpus = 1
+$skydns_domain = "docker"
+$skydns_environment = "dev"
+$registry_mirror = ""
 
 # Attempt to apply the deprecated environment variable NUM_INSTANCES to
 # $num_instances while allowing config.rb to override it
@@ -94,6 +97,9 @@ Vagrant.configure("2") do |config|
 
       if File.exists?("user-data.erb")
         discovery_url = DISCOVERY_URL
+        registry_mirror = $registry_mirror.size > 0 ? "#{$registry_mirror}/" : ""
+        skydns_domain = $skydns_domain
+        skydns_environment = $skydns_environment
         docker_bip_arg = "172.18.#{i+100}.1/24"
         docker_bip_routes = (1..$num_instances).to_a.reject { |o| o == i }.inject([]) do |routes, o|
           routes << "172.18.#{o+100}.0/24 via 172.17.8.#{o+100}"

@@ -2,3 +2,4 @@
 log/
 config.rb
 core-*-user-data
+user-data.erb
