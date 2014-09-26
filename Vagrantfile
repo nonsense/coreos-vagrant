@@ -95,7 +95,8 @@ Vagrant.configure("2") do |config|
       # Uncomment below to enable NFS for sharing the host machine into the coreos-vagrant VM.
       #config.vm.synced_folder ".", "/home/core/share", id: "core", :nfs => true, :mount_options => ['nolock,vers=3,udp']
 
-      if File.exists?("user-data.erb")
+      cloud_config_path = "#{vm_name}-user-data"
+      if not File.exists?(cloud_config_path)
         discovery_url = DISCOVERY_URL
         registry_mirror = $registry_mirror.size > 0 ? "#{$registry_mirror}/" : ""
         skydns_domain = $skydns_domain
@@ -105,16 +106,15 @@ Vagrant.configure("2") do |config|
           routes << "172.18.#{o+100}.0/24 via 172.17.8.#{o+100}"
         end
 
-        cloud_config_path = "#{vm_name}-user-data"
         erb = ERB.new(File.read("user-data.erb"), 0, "<>-")
         File.open(cloud_config_path, "w") do |io|
           io.puts erb.result(binding)
         end
 
-        config.vm.provision :file, :source => cloud_config_path, :destination => "/tmp/vagrantfile-user-data"
-        config.vm.provision :shell, :inline => "mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/", :privileged => true
       end
 
+      config.vm.provision :file, :source => cloud_config_path, :destination => "/tmp/vagrantfile-user-data"
+      config.vm.provision :shell, :inline => "mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/", :privileged => true
     end
   end
 end
