@@ -1,6 +1,8 @@
 #cloud-config
 
 coreos:
+  update:
+    reboot-strategy: off
   etcd:
     discovery: <%= discovery_url %>
     addr: $public_ipv4:4001
