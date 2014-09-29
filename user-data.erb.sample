@@ -57,33 +57,41 @@ coreos:
       content: |
         [Unit]
         Description=DNS discovery service
+        After=docker.service
         Requires=docker.service
 
         [Service]
         EnvironmentFile=/etc/environment
         ExecStartPre=-/usr/bin/docker rm -f skydns
-        ExecStartPre=-/usr/bin/docker pull <%= registry_mirror %>crosbymichael/skydns
+        ExecStartPre=-/usr/bin/docker pull <%= registry_mirror %>sheldonh/skydns
         ExecStart=/usr/bin/docker run --name skydns \
-        -p ${COREOS_PRIVATE_IPV4}:53:53/udp \
-          <%= registry_mirror %>crosbymichael/skydns -nameserver 8.8.8.8:53 -domain <%= skydns_domain %>
+          -p ${COREOS_PRIVATE_IPV4}:53:53/udp \
+          -e SKYDNS_ADDR=0.0.0.0:53 \
+          -e SKYDNS_NAMESERVERS=8.8.8.8:53,8.8.4.4:53 \
+          -e ETCD_MACHINES=http://${COREOS_PRIVATE_IPV4}:4001 \
+          <%= registry_mirror %>sheldonh/skydns
         ExecStop=-/usr/bin/docker stop skydns
 
         [Install]
         WantedBy=multi-user.target
-    - name: skydock.service
+    - name: registrator.service
       command: start
       content: |
         [Unit]
-        Description=DNS registration service
-        Requires=skydns.service
+        Description=DNS registrator service
+        After=docker.service
+        Requires=docker.service
 
         [Service]
-        ExecStartPre=-/usr/bin/docker rm -f skydock
-        ExecStartPre=-/usr/bin/docker pull <%= registry_mirror %>crosbymichael/skydock
-        ExecStart=/usr/bin/docker run --name skydock -v /var/run/docker.sock:/docker.sock \
-          <%= registry_mirror %>crosbymichael/skydock -domain <%= skydns_domain %> -ttl 30 -environment <%= skydns_environment %> \
-          -s /docker.sock -plugins /plugins/containerEnv.js -name skydns
-        ExecStop=-/usr/bin/docker stop skydock
+        EnvironmentFile=/etc/environment
+        ExecStartPre=-/usr/bin/docker rm -f registrator
+        ExecStartPre=-/usr/bin/docker pull <%= registry_mirror %>sheldonh/registrator
+        ExecStart=/usr/bin/docker run \
+          --name registrator \
+          -h ${HOSTNAME} \
+          -v /var/run/docker.sock:/tmp/docker.sock \
+          <%= registry_mirror %>sheldonh/registrator skydns2://${COREOS_PRIVATE_IPV4}:4001/<%= skydns_domain %>
+        ExecStop=-/usr/bin/docker stop registrator
 
         [Install]
-        WantedBy=multi-user.target
+        WantedBy=multiuser.target

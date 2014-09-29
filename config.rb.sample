@@ -52,5 +52,4 @@
 
 # Settings for Docker
 #$skydns_domain = "docker"
-#$skydns_environment = "dev"
 #$registry_mirror = "172.17.8.1:5000"
