@@ -64,6 +64,7 @@ coreos:
         EnvironmentFile=/etc/environment
         ExecStartPre=-/usr/bin/docker rm -f skydns
         ExecStartPre=-/usr/bin/docker pull <%= registry_mirror %>sheldonh/skydns
+        ExecStartPre=-/usr/bin/etcdctl set /skydns/config '{"ttl":1}'
         ExecStart=/usr/bin/docker run --name skydns \
           -p ${COREOS_PRIVATE_IPV4}:53:53/udp \
           -e SKYDNS_ADDR=0.0.0.0:53 \
@@ -91,7 +92,7 @@ coreos:
           --name registrator \
           -h ${HOSTNAME} \
           -v /var/run/docker.sock:/tmp/docker.sock \
-          <%= registry_mirror %>sheldonh/registrator skydns2://${COREOS_PRIVATE_IPV4}:4001/<%= skydns_domain %>
+          <%= registry_mirror %>sheldonh/registrator -internal skydns2://${COREOS_PRIVATE_IPV4}:4001/<%= skydns_domain %>
         ExecStop=-/usr/bin/docker stop registrator
 
         [Install]
