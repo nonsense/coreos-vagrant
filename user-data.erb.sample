@@ -69,8 +69,7 @@ coreos:
           -e SKYDNS_ADDR=0.0.0.0:53 \
           -e SKYDNS_DOMAIN=<%= skydns_domain %> \
           -e SKYDNS_NAMESERVERS=8.8.8.8:53,8.8.4.4:53 \
-          -e ETCD_MACHINES=http://${COREOS_PRIVATE_IPV4}:4001 \
-          <%= registry_mirror %>sheldonh/skydns
+          <%= registry_mirror %>sheldonh/skydns -machines http://${COREOS_PRIVATE_IPV4}:4001
         ExecStop=-/usr/bin/docker stop skydns
 
         [Install]
