@@ -92,7 +92,7 @@ coreos:
           --name registrator \
           -h ${HOSTNAME} \
           -v /var/run/docker.sock:/tmp/docker.sock \
-          <%= registry_mirror %>sheldonh/registrator -internal skydns2://${COREOS_PRIVATE_IPV4}:4001/<%= skydns_domain %>
+          <%= registry_mirror %>sheldonh/registrator -internal -ttl=30 -refresh-interval=15 skydns2://${COREOS_PRIVATE_IPV4}:4001/<%= skydns_domain %>
         ExecStop=-/usr/bin/docker stop registrator
 
         [Install]
