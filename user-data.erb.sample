@@ -88,7 +88,7 @@ coreos:
         ExecStartPre=-/usr/bin/docker pull <%= registry_mirror %>sheldonh/registrator
         ExecStart=/usr/bin/docker run \
           --name registrator \
-          -h ${HOSTNAME} \
+          -h %H \
           -v /var/run/docker.sock:/tmp/docker.sock \
           <%= registry_mirror %>sheldonh/registrator -internal -ttl=30 -refresh-interval=15 skydns2://${COREOS_PRIVATE_IPV4}:4001/<%= skydns_domain %>
         ExecStop=-/usr/bin/docker stop registrator
