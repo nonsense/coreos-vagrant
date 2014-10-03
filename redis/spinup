@@ -1,0 +1,48 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'net/ssh'
+
+MIRROR = '172.17.8.1:5000'
+
+orders = {
+  'redis-1-master' => {
+    'service'   => 'redis-1',
+    'image'     => 'redis',
+    'command'   => 'redis-server --appendonly yes',
+    'host'      => 'core-01',
+    'volumes'   => {
+      'redis-1' => '/data',
+    },
+  }
+}
+
+nodes = {
+	'core-01' => '172.17.8.101',
+	'core-02' => '172.17.8.102',
+	'core-03' => '172.17.8.103',
+}
+
+orders.each do |container, order|
+  service = order['service']
+  host = nodes[order['host']]
+  busybox = MIRROR + '/' + 'busybox'
+  image = MIRROR + '/' + order['image']
+  command = order['command']
+
+  volumes = ""
+  order['volumes'].each do |volume, mount_point|
+    volume_container = volume + mount_point.gsub(/\//, '-')
+    volumes += "--volumes-from #{volume_container}"
+
+    Net::SSH.start(host, 'core') do |ssh|
+      cmd = %Q{docker run --name #{volume_container} -v #{mount_point} #{busybox} /bin/sh -c 'chown 999 /data && echo volume container: #{volume_container}:#{mount_point}'}
+      puts host + ": " + cmd
+      puts ssh.exec!(cmd)
+
+      cmd = %Q{docker run -d --name #{container} -e SERVICE_NAME=#{service} -e SERVICE_ID=#{container} --volumes-from #{volume_container} #{image} #{command}}
+      puts host + ": " + cmd
+      puts ssh.exec!(cmd)
+    end
+  end
+end
