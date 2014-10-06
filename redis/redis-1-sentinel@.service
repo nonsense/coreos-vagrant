@@ -1,0 +1,20 @@
+[Unit]
+Description=Redis cluster 1 sentinel
+After=docker.service
+Requires=docker.service
+
+# XXX REDIS_PREFERRED_MASTER_HOST is only required because redis seems to ignore search path in /etc/resolv.conf when it resolves SLAVEOF
+[Service]
+Environment=UNIT=redis-1-sentinel-%i
+TimeoutStartSec=0
+ExecStartPre=-/usr/bin/docker rm -f ${UNIT}
+ExecStart=/usr/bin/docker run --name ${UNIT} \
+	-e SERVICE_NAME=redis-1 \
+	-e SERVICE_ID=sentinel-%i \
+	--dns=172.17.8.101 --dns=172.17.8.102 --dns=172.17.8.103 --dns-search=docker \
+	--volumes-from=redis-1-sentinel-config \
+	172.17.8.1:5000/redis redis-server /etc/redis/sentinel.conf --sentinel
+ExecStop=/usr/bin/docker stop ${UNIT}
+
+[X-Fleet]
+Conflicts=redis-1-sentinel@*.service

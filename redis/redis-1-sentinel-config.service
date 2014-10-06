@@ -1,0 +1,22 @@
+[Unit]
+Description=Redis cluster 1 sentinel config
+After=docker.service
+Requires=docker.service
+
+# XXX REDIS_PREFERRED_MASTER_HOST is only required because redis seems to ignore search path in /etc/resolv.conf when it resolves SLAVEOF
+[Service]
+Environment=UNIT=%p
+TimeoutStartSec=0
+ExecStart=/usr/bin/docker run --name ${UNIT} \
+	-e REDIS_PREFERRED_MASTER_HOST=node-1.redis-1.docker \
+	-v /etc/redis \
+	172.17.8.1:5000/busybox \
+	/bin/sh -c 'echo sentinel monitor redis-1 $${REDIS_PREFERRED_MASTER_HOST} 6379 2 > /etc/redis/sentinel.conf \
+		&& echo sentinel down-after-milliseconds redis-1 3000 >> /etc/redis/sentinel.conf \
+		&& echo sentinel failover-timeout redis-1 15000 >> /etc/redis/sentinel.conf \
+		&& echo sentinel parallel-syncs redis-1 1 >> /etc/redis/sentinel.conf \
+		&& chown -R 999 /etc/redis \
+		&& echo volume container: ${UNIT}'
+
+[X-Fleet]
+Global=true
