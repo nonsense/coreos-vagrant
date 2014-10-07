@@ -49,9 +49,9 @@ coreos:
 <% docker_bip_routes.each do |route| -%>
         ExecStartPost=-/usr/bin/ip route add <%= route %>
 <% end -%>
-	# until https://github.com/docker/docker/pull/7694 is released:
-	ExecStartPost=/bin/sleep 5
-	ExecStartPost=/sbin/iptables -t nat -D POSTROUTING ! -o docker0 -s <%= docker_bip_net %> -d 0.0.0.0/0 -j MASQUERADE
+        # until https://github.com/docker/docker/pull/7694 is released:
+        ExecStartPost=/bin/sleep 5
+        ExecStartPost=/sbin/iptables -t nat -D POSTROUTING ! -o docker0 -s <%= docker_bip_net %> -d 0.0.0.0/0 -j MASQUERADE
 
         [Install]
         WantedBy=multi-user.target
