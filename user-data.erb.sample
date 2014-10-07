@@ -52,6 +52,7 @@ coreos:
         # until https://github.com/docker/docker/pull/7694 is released:
         ExecStartPost=/bin/sleep 5
         ExecStartPost=/sbin/iptables -t nat -D POSTROUTING ! -o docker0 -s <%= docker_bip_net %> -d 0.0.0.0/0 -j MASQUERADE
+        ExecStartPost=/sbin/iptables -t nat -A POSTROUTING ! -o docker0 -s <%= docker_bip_net %> ! -d <%= docker_bip_supernet %> -j MASQUERADE
 
         [Install]
         WantedBy=multi-user.target
