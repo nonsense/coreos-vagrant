@@ -1,0 +1,19 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    json (1.8.1)
+    net-dns2 (0.8.6)
+      packetfu
+    packetfu (1.1.10)
+    redis (3.1.0)
+    redis-sentinel (1.4.4)
+      redis
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  json (~> 1.8)
+  net-dns2 (~> 0.8)
+  redis (~> 3.1)
+  redis-sentinel (~> 1.4)

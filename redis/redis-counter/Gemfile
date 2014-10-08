@@ -1,0 +1,6 @@
+source 'https://rubygems.org'
+
+gem 'json', '~> 1.8'
+gem 'redis', '~> 3.1'
+gem 'redis-sentinel', '~> 1.4'
+gem 'net-dns2', '~> 0.8'
