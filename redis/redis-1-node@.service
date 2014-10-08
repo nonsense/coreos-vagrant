@@ -17,7 +17,7 @@ ExecStart=/usr/bin/docker run --name ${UNIT} \
 	--volumes-from=redis-1-node-data \
 	--volumes-from=redis-1-node-config \
 	172.17.8.1:5000/redis /bin/sh -c ' \
-		if [ -e /etc/redis/redis.conf -a ! -s /etc/redis/redis.conf ]; then \
+		if [ ! -s /etc/redis/redis.conf ]; then \
 			if [ "$${SERVICE_ID}" != "$${REDIS_PREFERRED_SERVICE_ID}" ]; then \
 				echo slaveof $${REDIS_PREFERRED_MASTER_HOST} 6379 > /etc/redis/redis.conf; \
 			fi; \
