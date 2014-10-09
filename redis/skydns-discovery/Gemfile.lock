@@ -1,0 +1,12 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    net-dns2 (0.8.6)
+      packetfu
+    packetfu (1.1.10)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  net-dns2 (~> 0.8)
