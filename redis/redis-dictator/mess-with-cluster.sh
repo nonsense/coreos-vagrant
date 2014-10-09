@@ -7,8 +7,8 @@ fi
 hosts="$*"
 
 while ! read -t 0 abort; do
-	echo ruby select-master.rb $hosts
-	ruby select-master.rb $hosts
+	echo ruby redis-dictator.rb $hosts
+	ruby redis-dictator.rb $hosts
 
 	master=${hosts##* }
 	slaves=${hosts% *}
