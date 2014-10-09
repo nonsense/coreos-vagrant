@@ -175,15 +175,10 @@ redises = services.map { |i| RedisInstance.new(i) }
 master = redises.detect { |r| r.host == host and r.port == port } or raise "new master not found"
 slaves = redises.reject { |r| r == master }
 
-redises.each do |r|
-  puts "making #{r} reject_client_writes"
-  r.reject_client_writes!
-  r.rewrite_config!
-end
-
-redises.each do |r|
+slaves.each do |r|
   if r.master?
     puts "waiting for #{r} to flush to its slaves"
+    r.reject_client_writes!
     r.flush!
   end
 end
@@ -195,16 +190,13 @@ master.rewrite_config!
 slaves.each do |r|
   puts "enslave #{r}\n     -> #{master}"
   r.slave!(master)
+  r.allow_client_writes!
   r.rewrite_config!
 end
 
 puts "waiting for #{master} to flush to its slaves"
+master.reject_client_writes!
 master.flush!
-
-redises.each do |r|
-  puts "making #{r} accept_client_writes"
-  r.allow_client_writes!
-  r.rewrite_config!
-end
+master.allow_client_writes!
 
 puts "done"
