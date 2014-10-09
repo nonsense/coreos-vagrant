@@ -1,13 +1,10 @@
 require 'rubygems'
-require 'securerandom'
 require 'redis'
-require 'net/dns'
-
-HARDCODED_DOMAIN = "docker"
-IMPOSSIBLY_HUGE_NUMBER_OF_SLAVES = 1_000_000
-SELECT_MASTER_CHANNEL = 'select-master'
 
 class RedisInstance
+
+  IMPOSSIBLY_HUGE_NUMBER_OF_SLAVES = 1_000_000
+  SELECT_MASTER_CHANNEL = 'select-master'
 
   attr_reader :host, :port
 
@@ -25,7 +22,7 @@ class RedisInstance
   end
 
   def to_s
-    {host: @host, port: @port, master: master}.to_s
+    {host: @host, port: @port}.to_s
   end
 
   def master?
@@ -67,15 +64,6 @@ class RedisInstance
     end
 
   private
-
-    def master
-      info = redis.info
-      if info['role'] == 'master'
-        'no one'
-      else
-        info['master_host'] + ' ' + info['master_port']
-      end
-    end
 
     def redis
       @_redis ||= Redis.new(host: @host, port: @port)
@@ -137,43 +125,19 @@ class RedisInstance
 
 end
 
-def resolver
-  Net::DNS::Resolver.new(searchlist: [HARDCODED_DOMAIN],
-                         nameservers: [IPAddr.new("172.17.8.101"), IPAddr.new("172.17.8.102"), IPAddr.new("172.17.8.103")])
-end
-
-def lookup_instances
-  service = "redis-1"
-  resolver.search(service).elements.map { |a| {host: a.value, port: 6379} }
-end
-
-def lookup_instance(host)
-  service = "redis-1"
-  resolver.search("#{host}.#{service}").elements.map { |a| {host: a.value, port: 6379} }.first
-end
-
-def find_master(redises)
-  redises.detect do |r|
-    r.info['role'] == 'master'
-  end
-end
-
-if ARGV.size != 1
-  $stderr.puts "usage: select-master.rb hostname"
+if ARGV.size < 2
+  $stderr.puts "usage: select-master.rb master[:port] slave[:port] ..."
   exit(1)
 end
 
-hostname = ARGV[0]
-master_service = lookup_instance(hostname)
-host, port = master_service[:host], master_service[:port]
+services = ARGV.map do |a|
+  host, port = a.split(':')
+  port = port ? port.to_i : 6379
+  {host: host, port: port}
+end
 
-services = lookup_instances
-services.each { |s| puts "discovered redis #{s}" }
-
-redises = services.map { |i| RedisInstance.new(i) }
-
-master = redises.detect { |r| r.host == host and r.port == port } or raise "new master not found"
-slaves = redises.reject { |r| r == master }
+redises = services.map { |s| RedisInstance.new(s) }
+master, *slaves = *redises
 
 slaves.each do |r|
   if r.master?
