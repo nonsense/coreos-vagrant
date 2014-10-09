@@ -194,9 +194,4 @@ slaves.each do |r|
   r.rewrite_config!
 end
 
-puts "waiting for #{master} to flush to its slaves"
-master.reject_client_writes!
-master.flush!
-master.allow_client_writes!
-
 puts "done"
