@@ -5,6 +5,7 @@ require 'net/dns'
 
 HARDCODED_DOMAIN = "docker"
 IMPOSSIBLY_HUGE_NUMBER_OF_SLAVES = 1_000_000
+SELECT_MASTER_CHANNEL = 'select-master'
 
 class RedisInstance
 
@@ -18,8 +19,9 @@ class RedisInstance
     redis.slaveof('no', 'one')
   end
 
-  def slave!(instance)
-    redis.slaveof(instance.host, instance.port)
+  def slave!(master)
+    redis.slaveof(master.host, master.port)
+    wait_until_slaved_to(master)
   end
 
   def to_s
@@ -30,8 +32,8 @@ class RedisInstance
     redis.info['role'] == 'master'
   end
 
-  def master_to?(other)
-    master? and get_slaves.detect { |s| s.host == other.host and s.port == other.port }
+  def send_message(message)
+    redis.publish(SELECT_MASTER_CHANNEL, message)
   end
 
   def reject_client_writes!
@@ -45,16 +47,16 @@ class RedisInstance
   end
 
   def flush!
-    slaves = get_slaves
-    if slaves.empty?
-      puts "WARNING: master with no online slaves #{self}"
-    else
-      loop do
-        break unless slaves.detect { |s| s.send(:repl_offset) != repl_offset }
-        puts "waiting for slaves to reach offset #{repl_offset}"
-        slaves.each { |s| puts "\t#{s} offset #{s.send(:repl_offset)}" }
-        sleep 0.1
+    loop do
+      slaves = get_slaves
+      if slaves.empty?
+        puts "WARNING: master with no online slaves #{self}"
+        break
       end
+      break if slaves.all? { |s| s.repl_offset == repl_offset }
+      puts "waiting for slaves to reach offset #{repl_offset}"
+      slaves.each { |s| puts "\t#{s} offset #{s.repl_offset}" }
+      sleep 0.1
     end
   end
 
@@ -86,14 +88,49 @@ class RedisInstance
       end
     end
 
+    def wait_until_slaved_to(master)
+      connected = false
+      message = "#{host}:#{port} seeks #{master.host}:#{master.port}"
+      receiver = Thread.new do
+        wait_for_message(message)
+        connected = true
+      end
+      receiver.abort_on_exception = true
+      loop do
+        master.send_message(message)
+        sleep 0.1
+        break if connected
+      end
+      receiver.join
+    end
+
+    def wait_for_message(message)
+      myself = to_s
+      redis.subscribe(SELECT_MASTER_CHANNEL) do |on|
+        on.message do |chn, msg|
+          redis.unsubscribe(SELECT_MASTER_CHANNEL) if msg == message
+        end
+      end
+    end
+
     def get_slaves
       info = redis.info
       slave_ids = info.keys.select { |k| k =~ /^slave\d+$/ }
       slave_states = slave_ids.inject([]) { |m, i| m << info[i] }
       slave_states.inject([]) do |m, s|
-        s =~ /ip=([^,]+),port=(\d+),state=online/ or next
-        m << RedisInstance.new(host: $1, port: $2.to_i)
+        s =~ /ip=([^,]+),port=(\d+),state=[^.]+,offset=(\d+)/ or next
+        m << RedisSlave.new(host: $1, port: $2.to_i, repl_offset: $3.to_i)
       end || []
+    end
+
+    class RedisSlave
+      attr_reader :host, :port, :repl_offset
+      def initialize(host: nil, port: nil, repl_offset: nil)
+        @host, @port, @repl_offset = host, port, repl_offset
+      end
+      def to_s
+        {host: @host, port: @port, offset: @repl_offset}.to_s
+      end
     end
 
 end
@@ -156,10 +193,6 @@ master.rewrite_config!
 slaves.each do |r|
   puts "enslave #{r}\n     -> #{master}"
   r.slave!(master)
-  loop do
-    break if master.master_to?(r)
-    sleep 0.1
-  end
   r.rewrite_config!
 end
 
@@ -167,7 +200,9 @@ puts "waiting for #{master} to flush to its slaves"
 master.flush!
 
 redises.each do |r|
+  puts "making #{r} accept_client_writes"
   r.allow_client_writes!
   r.rewrite_config!
-  puts r
 end
+
+puts "done"
