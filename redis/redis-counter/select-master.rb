@@ -32,10 +32,6 @@ class RedisInstance
     redis.info['role'] == 'master'
   end
 
-  def send_message(message)
-    redis.publish(SELECT_MASTER_CHANNEL, message)
-  end
-
   def reject_client_writes!
     @min_slaves ||= redis.config('GET', 'min-slaves-to-write')[1]
     redis.config('SET', 'min-slaves-to-write', IMPOSSIBLY_HUGE_NUMBER_OF_SLAVES)
@@ -63,6 +59,12 @@ class RedisInstance
   def rewrite_config!
     redis.config('REWRITE')
   end
+
+  protected
+
+    def send_message(message)
+      redis.publish(SELECT_MASTER_CHANNEL, message)
+    end
 
   private
 
