@@ -6,10 +6,11 @@ Requires=docker.service
 [Service]
 Environment=UNIT=%p
 TimeoutStartSec=0
-ExecStart=/usr/bin/docker run --name ${UNIT} \
-	-v /data \
-	172.17.8.1:5000/busybox \
-	/bin/sh -c 'chown 999 /data && echo volume container: ${UNIT}'
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=/usr/bin/docker pull 172.17.8.1:5000/sheldonh/dvc
+ExecStart=/bin/sh -c '/usr/bin/docker inspect ${UNIT} >/dev/null 2>&1 \
+	|| /usr/bin/docker run --name ${UNIT} -v /data 172.17.8.1:5000/sheldonh/dvc /data:755:999:999'
 
 [X-Fleet]
 Global=true
