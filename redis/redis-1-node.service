@@ -12,7 +12,7 @@ ExecStartPre=-/usr/bin/docker rm -f ${UNIT}
 ExecStartPre=/usr/bin/docker pull 172.17.8.1:5000/redis
 ExecStart=/usr/bin/docker run --name ${UNIT} \
 	-e SERVICE_NAME=redis-1 \
-	-h %H \
+	-e SERVICE_ID=%m \
 	--volumes-from=redis-1-node-data \
 	--volumes-from=redis-1-node-config \
 	172.17.8.1:5000/redis redis-server /etc/redis/redis.conf --appendonly yes
