@@ -2,6 +2,7 @@
 Description=Redis cluster 1 dictator
 After=docker.service
 Require=docker.service
+After=redis-1-node.service
 
 [Service]
 Environment=UNIT=redis-1-dictator
@@ -13,3 +14,6 @@ ExecStart=/usr/bin/docker run --name ${UNIT} \
 	-P \
 	172.17.8.1:5000/sheldonh/redis-dictator
 ExecStop=/usr/bin/docker stop ${UNIT}
+
+[X-Fleet]
+MachineOf=redis-1-node.service
