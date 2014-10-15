@@ -9,6 +9,7 @@ coreos:
     peer-addr: $public_ipv4:7001
   fleet:
     public-ip: $public_ipv4
+    metadata: hosts=redis-1
   units:
     - name: etcd.service
       command: start
