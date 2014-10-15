@@ -1,9 +1,9 @@
 [Unit]
 Description=Redis cluster 1 node
 After=redis-1-node-data.service
-Require=redis-1-node-data.service
+Requires=redis-1-node-data.service
 After=redis-1-node-config.service
-Require=redis-1-node-config.service
+Requires=redis-1-node-config.service
 
 [Service]
 Environment=UNIT=redis-1-node

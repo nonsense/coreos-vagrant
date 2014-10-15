@@ -1,7 +1,7 @@
 [Unit]
 Description=Redis cluster 1 dictator
 After=docker.service
-Require=docker.service
+Requires=docker.service
 After=redis-1-node.service
 
 [Service]
