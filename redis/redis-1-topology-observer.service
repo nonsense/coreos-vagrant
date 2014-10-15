@@ -1,7 +1,7 @@
 [Unit]
 Description=Redis cluster 1 topology observer
 After=redis-1-dictator.service
-Require=redis-1-dictator.service
+BindTo=redis-1-dictator.service
 
 [Service]
 Environment=UNIT=redis-1-topology-observer
