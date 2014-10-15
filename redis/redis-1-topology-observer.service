@@ -11,10 +11,11 @@ ExecStartPre=-/usr/bin/docker rm -f ${UNIT}
 ExecStartPre=/usr/bin/docker pull 172.17.8.1:5000/sheldonh/etcd-observer
 ExecStart=/usr/bin/docker run --name ${UNIT} \
 	-e ETCD_PEERS=http://${COREOS_PRIVATE_IPV4}:4001 \
-	-e ETCD_KEY=/config/redis-1/topology \
+	-e ETCD_WATCH_KEY=/config/redis-1/topology-trigger \
+	-e ETCD_NOTIFY_KEY=/config/redis-1/topology \
 	-e NOTIFY_PATH=/master \
 	--link redis-1-dictator:notify \
-	172.17.8.1:5000/sheldonh/etcd-observer
+	172.17.8.1:5000/sheldonh/etcd-trigger
 ExecStop=/usr/bin/docker stop ${UNIT}
 
 [X-Fleet]
