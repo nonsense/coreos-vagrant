@@ -76,6 +76,7 @@ cat > topology.json <<EOF
 EOF
 
 sh define-topology.sh
+sh apply-topology.sh
 ```
 
 Now schedule the services and wait for them to start:
