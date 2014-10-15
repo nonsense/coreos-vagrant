@@ -1,16 +1,13 @@
 {
   "master": {
-    "address": "172.18.101.11",
-    "port": 6379
+    "address": "core-01.redis-1.docker"
   },
   "slaves": [
     {
-      "address": "172.18.102.11",
-      "port": 6379
+      "address": "core-02.redis-1.docker"
     },
     {
-      "address": "172.18.103.11",
-      "port": 6379
+      "address": "core-03.redis-1.docker"
     }
   ]
 }

@@ -21,3 +21,4 @@ ExecStop=/usr/bin/docker stop ${UNIT}
 
 [X-Fleet]
 Global=true
+MachineMetadata=hosts=redis-1

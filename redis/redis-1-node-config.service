@@ -16,3 +16,4 @@ ExecStart=/usr/bin/docker run --rm --volumes-from redis-1-node-config \
 
 [X-Fleet]
 Global=true
+MachineMetadata=hosts=redis-1
