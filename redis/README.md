@@ -103,4 +103,5 @@ For the demo to shine, it should
 
 * set up `master.redis-1.docker` and `slaves.redis-1.docker` in SkyDNS, and
 * show how to connect to the redis master without `vagrant ssh`,
-* show how to connect to the redis master on an ephemeral port.
+* show how to connect to the redis master on an ephemeral port,
+* make the local registry mirror optional.
