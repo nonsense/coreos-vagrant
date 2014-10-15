@@ -5,12 +5,15 @@ Require=docker.service
 After=redis-1-node.service
 
 [Service]
+EnvironmentFile=/etc/environment
 Environment=UNIT=redis-1-dictator
 TimeoutStartSec=0
 ExecStartPre=-/usr/bin/docker rm -f ${UNIT}
 ExecStartPre=/usr/bin/docker pull 172.17.8.1:5000/sheldonh/redis-dictator
 ExecStart=/usr/bin/docker run --name ${UNIT} \
 	-e SERVICE_NAME=${UNIT} \
+	--dns ${COREOS_PRIVATE_IPV4} \
+	--dns-search docker \
 	-P \
 	172.17.8.1:5000/sheldonh/redis-dictator
 ExecStop=/usr/bin/docker stop ${UNIT}
