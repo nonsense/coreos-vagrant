@@ -2,21 +2,25 @@
 Description=Redis cluster 1 topology observer
 After=redis-1-dictator.service
 BindTo=redis-1-dictator.service
+After=redis-1-dnsd.service
+BindTo=redis-1-dnsd.service
 
 [Service]
 Environment=UNIT=redis-1-topology-observer
 EnvironmentFile=/etc/environment
 TimeoutStartSec=0
 ExecStartPre=-/usr/bin/docker rm -f ${UNIT}
-ExecStartPre=/usr/bin/docker pull 172.17.8.1:5000/sheldonh/etcd-observer
+ExecStartPre=/usr/bin/docker pull 172.17.8.1:5000/sheldonh/etcd-trigger
 ExecStart=/usr/bin/docker run --name ${UNIT} \
 	-e ETCD_PEERS=http://${COREOS_PRIVATE_IPV4}:4001 \
 	-e ETCD_WATCH_KEY=/config/redis-1/topology-trigger \
 	-e ETCD_NOTIFY_KEY=/config/redis-1/topology \
-	-e NOTIFY_PATH=/master \
-	--link redis-1-dictator:notify \
+	-e 'NOTIFY_URLS=http://$${DICTATOR_PORT_8080_TCP_ADDR}:$${DICTATOR_PORT_8080_TCP_PORT}/master \
+			http://$${DNSD_PORT_8080_TCP_ADDR}:$${DNSD_PORT_8080_TCP_PORT}/dns' \
+	--link redis-1-dictator:dictator \
+	--link redis-1-dnsd:dnsd \
 	172.17.8.1:5000/sheldonh/etcd-trigger
 ExecStop=/usr/bin/docker stop ${UNIT}
 
 [X-Fleet]
-MachineOf=redis-1-dictator.service
+MachineMetadata=hosts=redis-1

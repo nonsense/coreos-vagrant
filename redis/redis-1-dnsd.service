@@ -1,20 +1,20 @@
 [Unit]
-Description=Redis cluster 1 dictator
+Description=Redis cluster 1 dnsd
 After=docker.service
 Requires=docker.service
 
 [Service]
 EnvironmentFile=/etc/environment
-Environment=UNIT=redis-1-dictator
+Environment=UNIT=redis-1-dnsd
 TimeoutStartSec=0
 ExecStartPre=-/usr/bin/docker rm -f ${UNIT}
-ExecStartPre=/usr/bin/docker pull 172.17.8.1:5000/sheldonh/redis-dictator
+ExecStartPre=/usr/bin/docker pull 172.17.8.1:5000/sheldonh/redis-dnsd
 ExecStart=/usr/bin/docker run --name ${UNIT} \
 	-e SERVICE_NAME=${UNIT} \
-	--dns ${COREOS_PRIVATE_IPV4} \
-	--dns-search docker \
+	-e ETCD_PEERS=http://${COREOS_PRIVATE_IPV4}:4001 \
+	-e PUBLISH_DOMAIN=redis-1.docker \
 	-P \
-	172.17.8.1:5000/sheldonh/redis-dictator
+	172.17.8.1:5000/sheldonh/redis-dnsd
 ExecStop=/usr/bin/docker stop ${UNIT}
 
 [X-Fleet]

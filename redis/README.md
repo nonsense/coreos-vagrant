@@ -22,7 +22,9 @@ The following services maintain the master/slave topology:
 
 `redis-1-dictator.service` listens for HTTP PUT requests to its /master path, expecting a JSON representation of the desired master/slave topology. If a redis instance is addressed by name instead of IP address, a DNS SRV lookup against the CoreOS cluster's SkyDNS is used to look up the IP address and port of the instance. The topology is then applied, with operations ordered to guarantee that no data is lost, at the cost of a small window during which writes to an old master will error out. Clients are expected to rediscover the redis master and retry on failure.
 
-`redis-1-topology-observer.service` watches the etcd key `/config/redis-1/topology-trigger` for writes from `redis-1-node.service` startups. When a write occurs, it reads the etcd key `/config/redis-1/topology` and sends its value to `redis-1-dictator.service`.
+`redis-1-dnsd.service` listens for HTTP PUT requests to ids /dns path, expecting a JSON representation of the desired master/slave topology.  It currently only supports toplogies that address redis instances by SRV hostname, not by IP address. It publishes `master.redis-1.docker` and `slaves.redis-1.docker` SRV records.
+
+`redis-1-topology-observer.service` watches the etcd key `/config/redis-1/topology-trigger` for writes from `redis-1-node.service` startups. When a write occurs, it reads the etcd key `/config/redis-1/topology` and sends its value to `redis-1-dictator.service` and `redis-1-dnsd.service`.
 
 ## Assumptions
 
@@ -101,6 +103,7 @@ vagrant ssh 172.17.8.101 -- docker run --rm -it --link redis-1-node:redis 172.17
 
 For the demo to shine, it should
 
+* fix dependency issue requiring a fleet stop/start of `redis-1-topology-observer.service` on first deploy,
 * set up `master.redis-1.docker` and `slaves.redis-1.docker` in SkyDNS, and
 * show how to connect to the redis master without `vagrant ssh`,
 * show how to connect to the redis master on an ephemeral port,
