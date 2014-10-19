@@ -8,9 +8,9 @@ Environment=UNIT=%p
 TimeoutStartSec=0
 Type=oneshot
 RemainAfterExit=yes
-ExecStartPre=/usr/bin/docker pull 172.17.8.1:5000/sheldonh/dvc
+ExecStartPre=/usr/bin/docker pull sheldonh/dvc
 ExecStart=/bin/sh -c '/usr/bin/docker inspect ${UNIT} >/dev/null 2>&1 \
-	|| /usr/bin/docker run --name ${UNIT} -v /data 172.17.8.1:5000/sheldonh/dvc /data:755:999:999'
+	|| /usr/bin/docker run --name ${UNIT} -v /data sheldonh/dvc /data:755:999:999'
 
 [X-Fleet]
 Global=true

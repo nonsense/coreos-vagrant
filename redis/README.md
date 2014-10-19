@@ -55,7 +55,7 @@ $vb_memory = 2048
 $registry_mirror = "172.17.8.1:5000"
 EOF
 
-vagrant destroy -f && rm -f core-*-user-data && cp user-data.erb.sample user-data.erb && vagrant up
+vagrant destroy -f && rm -f core-*-user-data ~/.fleetctl/known_hosts && cp user-data.erb.sample user-data.erb && vagrant up
 ```
 
 Once the cluster is up, define the redis master/slave topology. Note that this doesn't actually have to be done before the redis services are brought up.
@@ -78,7 +78,6 @@ cat > topology.json <<EOF
 EOF
 
 sh define-topology.sh
-sh apply-topology.sh
 ```
 
 Now schedule the services and wait for them to start:
@@ -86,7 +85,9 @@ Now schedule the services and wait for them to start:
 ```
 cd redis
 
-fleet start *.service
+ssh-add ~/.vagrant.d/insecure_private_key
+export FLEETCTL_TUNNEL=127.0.0.1:2222
+fleetctl start *.service
 
 watch fleetctl list-units
 ```

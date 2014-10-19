@@ -10,7 +10,7 @@ Environment=UNIT=redis-1-topology-observer
 EnvironmentFile=/etc/environment
 TimeoutStartSec=0
 ExecStartPre=-/usr/bin/docker rm -f ${UNIT}
-ExecStartPre=/usr/bin/docker pull 172.17.8.1:5000/sheldonh/etcd-trigger
+ExecStartPre=/usr/bin/docker pull sheldonh/etcd-trigger
 ExecStart=/usr/bin/docker run --name ${UNIT} \
 	-e ETCD_PEERS=http://${COREOS_PRIVATE_IPV4}:4001 \
 	-e ETCD_WATCH_KEY=/config/redis-1/topology-trigger \
@@ -19,7 +19,7 @@ ExecStart=/usr/bin/docker run --name ${UNIT} \
 			http://$${DNSD_PORT_8080_TCP_ADDR}:$${DNSD_PORT_8080_TCP_PORT}/dns' \
 	--link redis-1-dictator:dictator \
 	--link redis-1-dnsd:dnsd \
-	172.17.8.1:5000/sheldonh/etcd-trigger
+	sheldonh/etcd-trigger
 ExecStop=/usr/bin/docker stop ${UNIT}
 
 [X-Fleet]

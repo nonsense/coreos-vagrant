@@ -8,13 +8,13 @@ EnvironmentFile=/etc/environment
 Environment=UNIT=redis-1-dnsd
 TimeoutStartSec=0
 ExecStartPre=-/usr/bin/docker rm -f ${UNIT}
-ExecStartPre=/usr/bin/docker pull 172.17.8.1:5000/sheldonh/redis-dnsd
+ExecStartPre=/usr/bin/docker pull sheldonh/redis-dnsd
 ExecStart=/usr/bin/docker run --name ${UNIT} \
 	-e SERVICE_NAME=${UNIT} \
 	-e ETCD_PEERS=http://${COREOS_PRIVATE_IPV4}:4001 \
 	-e PUBLISH_DOMAIN=redis-1.docker \
 	-P \
-	172.17.8.1:5000/sheldonh/redis-dnsd
+	sheldonh/redis-dnsd
 ExecStop=/usr/bin/docker stop ${UNIT}
 
 [X-Fleet]

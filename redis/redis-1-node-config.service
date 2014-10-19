@@ -8,11 +8,11 @@ Environment=UNIT=%p
 TimeoutStartSec=0
 Type=oneshot
 RemainAfterExit=yes
-ExecStartPre=/usr/bin/docker pull 172.17.8.1:5000/sheldonh/dvc
+ExecStartPre=/usr/bin/docker pull sheldonh/dvc
 ExecStartPre=/bin/sh -c '/usr/bin/docker inspect ${UNIT} >/dev/null 2>&1 \
-	|| /usr/bin/docker run --name ${UNIT} -v /etc/redis 172.17.8.1:5000/sheldonh/dvc /etc/redis:755:999:999'
+	|| /usr/bin/docker run --name ${UNIT} -v /etc/redis sheldonh/dvc /etc/redis:755:999:999'
 ExecStart=/usr/bin/docker run --rm --volumes-from redis-1-node-config \
-	172.17.8.1:5000/busybox /bin/sh -c 'touch /etc/redis/redis.conf && chown 999:999  /etc/redis/redis.conf'
+	busybox /bin/sh -c 'touch /etc/redis/redis.conf && chown 999:999  /etc/redis/redis.conf'
 
 [X-Fleet]
 Global=true

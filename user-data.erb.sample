@@ -46,14 +46,10 @@ coreos:
         LimitNPROC=1048576
         # Run docker but don't have docker automatically restart
         # containers. This is a job for systemd and unit files.
-        ExecStart=/usr/bin/docker --daemon --storage-driver=btrfs --host=fd:// --bip=<%= docker_bip_arg %>
+        ExecStart=/usr/bin/docker --daemon --storage-driver=btrfs --host=fd:// --bip=<%= docker_bip_arg %> --ip-masq=false <%= registry_mirror.length > 0 ? "--registry-mirror=http://#{registry_mirror}" : "" %>
 <% docker_bip_routes.each do |route| -%>
         ExecStartPost=-/usr/bin/ip route add <%= route %>
 <% end -%>
-        # until https://github.com/docker/docker/pull/7694 is released:
-        ExecStartPost=/bin/sleep 5
-        ExecStartPost=/sbin/iptables -t nat -D POSTROUTING ! -o docker0 -s <%= docker_bip_net %> -d 0.0.0.0/0 -j MASQUERADE
-        ExecStartPost=/sbin/iptables -t nat -A POSTROUTING ! -o docker0 -s <%= docker_bip_net %> ! -d <%= docker_bip_supernet %> -j MASQUERADE
 
         [Install]
         WantedBy=multi-user.target
@@ -68,13 +64,13 @@ coreos:
         [Service]
         EnvironmentFile=/etc/environment
         ExecStartPre=-/usr/bin/docker rm -f skydns
-        ExecStartPre=-/usr/bin/docker pull <%= registry_mirror %>sheldonh/skydns
+        ExecStartPre=-/usr/bin/docker pull sheldonh/skydns
         ExecStart=/usr/bin/docker run --name skydns \
           -p ${COREOS_PRIVATE_IPV4}:53:53/udp \
           -e SKYDNS_ADDR=0.0.0.0:53 \
           -e SKYDNS_DOMAIN=<%= skydns_domain %> \
           -e SKYDNS_NAMESERVERS=8.8.8.8:53,8.8.4.4:53 \
-          <%= registry_mirror %>sheldonh/skydns -machines http://${COREOS_PRIVATE_IPV4}:4001
+          sheldonh/skydns -machines http://${COREOS_PRIVATE_IPV4}:4001
         ExecStop=-/usr/bin/docker stop skydns
 
         [Install]
@@ -90,12 +86,12 @@ coreos:
         [Service]
         EnvironmentFile=/etc/environment
         ExecStartPre=-/usr/bin/docker rm -f registrator
-        ExecStartPre=-/usr/bin/docker pull <%= registry_mirror %>sheldonh/registrator
+        ExecStartPre=-/usr/bin/docker pull sheldonh/registrator
         ExecStart=/usr/bin/docker run \
           --name registrator \
           -h %H \
           -v /var/run/docker.sock:/tmp/docker.sock \
-          <%= registry_mirror %>sheldonh/registrator -internal -ttl=30 -refresh-interval=15 skydns2://${COREOS_PRIVATE_IPV4}:4001/<%= skydns_domain %>
+          sheldonh/registrator -internal -ttl=30 -refresh-interval=15 skydns2://${COREOS_PRIVATE_IPV4}:4001/<%= skydns_domain %>
         ExecStop=-/usr/bin/docker stop registrator
 
         [Install]

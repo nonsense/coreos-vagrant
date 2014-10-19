@@ -10,7 +10,7 @@ DISCOVERY_URL = %x{curl -s https://discovery.etcd.io/new}.chomp
 CONFIG = File.join(File.dirname(__FILE__), "config.rb")
 
 # Defaults for config options defined in CONFIG
-$num_instances = 1
+$num_instances = 3
 $update_channel = "alpha"
 $enable_serial_logging = false
 $vb_gui = false
@@ -98,7 +98,7 @@ Vagrant.configure("2") do |config|
       cloud_config_path = "#{vm_name}-user-data"
       if not File.exists?(cloud_config_path)
         discovery_url = DISCOVERY_URL
-        registry_mirror = $registry_mirror.size > 0 ? "#{$registry_mirror}/" : ""
+        registry_mirror = $registry_mirror
         skydns_domain = $skydns_domain
         skydns_environment = $skydns_environment
         docker_bip_supernet = "172.18.0.0/16"

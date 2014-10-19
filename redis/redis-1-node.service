@@ -9,13 +9,13 @@ Requires=redis-1-node-config.service
 Environment=UNIT=redis-1-node
 TimeoutStartSec=0
 ExecStartPre=-/usr/bin/docker rm -f ${UNIT}
-ExecStartPre=/usr/bin/docker pull 172.17.8.1:5000/redis
+ExecStartPre=/usr/bin/docker pull redis
 ExecStart=/usr/bin/docker run --name ${UNIT} \
 	-e SERVICE_NAME=redis-1 \
 	-e SERVICE_ID=%H \
 	--volumes-from=redis-1-node-data \
 	--volumes-from=redis-1-node-config \
-	172.17.8.1:5000/redis redis-server /etc/redis/redis.conf --appendonly yes
+	redis redis-server /etc/redis/redis.conf --appendonly yes
 ExecStartPost=/usr/bin/bash -c '/usr/bin/etcdctl set /config/redis-1/topology-trigger 1'
 ExecStop=/usr/bin/docker stop ${UNIT}
 
