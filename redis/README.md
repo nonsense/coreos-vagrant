@@ -41,7 +41,21 @@ The [sheldonh/coreos-vagrant](https://github.com/sheldonh/coreos-vagrant) repo c
 
 ## Demo
 
-To get up and running, first create the CoreOS cluster. Note that this demo assumes you run a local docker registry, to save docker pulls when you destroy and recreate the cluster. If that's too desirable, just hack the registry mirror details out of the Fleet service files.
+First set up an (optional) Docker registry mirror, to save on redownloading images every time you destroy and recreate your CoreOS cluster.
+
+```
+# On Fedora
+sudo yum install -y docker-io
+sudo curl -L http://goo.gl/fMM65m -o /etc/systemd/system/docker-registry-mirror.service
+sudo systemctl start docker-registry-mirror.service
+sudo systemctl enable docker-registry-mirror.service
+sudo firewall-cmd --zone=public --add-port=5000/tcp
+sudo firewall-cmd --zone=public --permanent --add-port=5000/tcp
+```
+
+Now create the CoreOS cluster. If you don't want to bother with a Docker registry mirror, just leave the `$registry_mirror` declaration
+out of your `config.rb`. Note that we track the `alpha` channel of CoreOS for docker-1.3.0, for its `--ip-masq` and `--registry-mirror`
+options:
 
 ```
 git clone git@github.com:sheldonh/coreos-vagrant
@@ -49,16 +63,17 @@ git clone git@github.com:sheldonh/coreos-vagrant
 cd coreos-vagrant
 
 cat > config.rb <<EOF
-$num_instances=3
-$update_channel='alpha'
-$vb_memory = 2048
-$registry_mirror = "172.17.8.1:5000"
+\$num_instances=3
+\$update_channel='alpha'
+\$vb_memory = 2048
+\$registry_mirror = "172.17.8.1:5000"
 EOF
 
 vagrant destroy -f && rm -f core-*-user-data ~/.fleetctl/known_hosts && cp user-data.erb.sample user-data.erb && vagrant up
 ```
 
-Once the cluster is up, define the redis master/slave topology. Note that this doesn't actually have to be done before the redis services are brought up.
+Once the cluster is up, define the redis master/slave topology.
+Note that this doesn't actually have to be done before the redis services are brought up.
 
 ```
 cat > topology.json <<EOF

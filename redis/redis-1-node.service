@@ -15,6 +15,7 @@ ExecStart=/usr/bin/docker run --name ${UNIT} \
 	-e SERVICE_ID=%H \
 	--volumes-from=redis-1-node-data \
 	--volumes-from=redis-1-node-config \
+	-P \
 	redis redis-server /etc/redis/redis.conf --appendonly yes
 ExecStartPost=/usr/bin/bash -c '/usr/bin/etcdctl set /config/redis-1/topology-trigger 1'
 ExecStop=/usr/bin/docker stop ${UNIT}

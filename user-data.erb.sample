@@ -10,6 +10,15 @@ coreos:
   fleet:
     public-ip: $public_ipv4
     metadata: hosts=redis-1
+  write_files:
+    - path: /etc/ssh/sshd_config
+      permissions: 0600
+      owner: root:root
+      content: |
+        UsePrivilegeSeparation sandbox
+        Subsystem sftp internal-sftp
+        ClientAliveInterval 180
+        UseDNS no
   units:
     - name: etcd.service
       command: start
@@ -46,10 +55,7 @@ coreos:
         LimitNPROC=1048576
         # Run docker but don't have docker automatically restart
         # containers. This is a job for systemd and unit files.
-        ExecStart=/usr/bin/docker --daemon --storage-driver=btrfs --host=fd:// --bip=<%= docker_bip_arg %> --ip-masq=false <%= registry_mirror.length > 0 ? "--registry-mirror=http://#{registry_mirror}" : "" %>
-<% docker_bip_routes.each do |route| -%>
-        ExecStartPost=-/usr/bin/ip route add <%= route %>
-<% end -%>
+        ExecStart=/usr/bin/docker --daemon --storage-driver=btrfs --host=fd:// <%= registry_mirror.length > 0 ? "--registry-mirror=http://#{registry_mirror}" : "" %>
 
         [Install]
         WantedBy=multi-user.target
@@ -62,6 +68,7 @@ coreos:
         Requires=docker.service
 
         [Service]
+        TimeoutStartSec=0
         EnvironmentFile=/etc/environment
         ExecStartPre=-/usr/bin/docker rm -f skydns
         ExecStartPre=-/usr/bin/docker pull sheldonh/skydns
@@ -84,6 +91,7 @@ coreos:
         Requires=docker.service
 
         [Service]
+        TimeoutStartSec=0
         EnvironmentFile=/etc/environment
         ExecStartPre=-/usr/bin/docker rm -f registrator
         ExecStartPre=-/usr/bin/docker pull sheldonh/registrator
@@ -91,7 +99,7 @@ coreos:
           --name registrator \
           -h %H \
           -v /var/run/docker.sock:/tmp/docker.sock \
-          sheldonh/registrator -internal -ttl=30 -refresh-interval=15 skydns2://${COREOS_PRIVATE_IPV4}:4001/<%= skydns_domain %>
+          sheldonh/registrator -ttl=30 -refresh-interval=15 skydns2://${COREOS_PRIVATE_IPV4}:4001/<%= skydns_domain %>
         ExecStop=-/usr/bin/docker stop registrator
 
         [Install]
