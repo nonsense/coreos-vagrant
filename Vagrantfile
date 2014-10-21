@@ -7,7 +7,8 @@ require 'fileutils'
 Vagrant.require_version ">= 1.6.0"
 
 DISCOVERY_URL = %x{curl -s https://discovery.etcd.io/new}.chomp
-CONFIG = File.join(File.dirname(__FILE__), "config.rb")
+BASEDIR = File.dirname(__FILE__)
+CONFIG = File.join(BASEDIR, "config.rb")
 
 # Defaults for config options defined in CONFIG
 $num_instances = 3
@@ -95,7 +96,7 @@ Vagrant.configure("2") do |config|
       # Uncomment below to enable NFS for sharing the host machine into the coreos-vagrant VM.
       #config.vm.synced_folder ".", "/home/core/share", id: "core", :nfs => true, :mount_options => ['nolock,vers=3,udp']
 
-      cloud_config_path = "#{vm_name}-user-data"
+      cloud_config_path = File.join(BASEDIR, "#{vm_name}-user-data")
       if not File.exists?(cloud_config_path)
         discovery_url = DISCOVERY_URL
         registry_mirror = $registry_mirror
@@ -108,7 +109,7 @@ Vagrant.configure("2") do |config|
           routes << "172.18.#{o+100}.0/24 via 172.17.8.#{o+100}"
         end
 
-        erb = ERB.new(File.read("user-data.erb"), 0, "<>-")
+        erb = ERB.new(File.read(File.join(BASEDIR, "user-data.erb")), 0, "<>-")
         File.open(cloud_config_path, "w") do |io|
           io.puts erb.result(binding)
         end
