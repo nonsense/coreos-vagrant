@@ -62,13 +62,13 @@ coreos:
         TimeoutStartSec=0
         EnvironmentFile=/etc/environment
         ExecStartPre=-/usr/bin/docker rm -f skydns
-        ExecStartPre=-/usr/bin/docker pull sheldonh/skydns
+        ExecStartPre=-/usr/bin/docker pull skynetservices/skydns
         ExecStart=/usr/bin/docker run --name skydns \
           -p ${COREOS_PRIVATE_IPV4}:53:53/udp \
           -e SKYDNS_ADDR=0.0.0.0:53 \
           -e SKYDNS_DOMAIN=<%= skydns_domain %> \
           -e SKYDNS_NAMESERVERS=8.8.8.8:53,8.8.4.4:53 \
-          sheldonh/skydns -machines http://${COREOS_PRIVATE_IPV4}:4001
+          skynetservices/skydns -machines http://${COREOS_PRIVATE_IPV4}:4001
         ExecStop=-/usr/bin/docker stop skydns
 
         [Install]
