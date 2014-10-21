@@ -1,6 +1,6 @@
 [Unit]
 Description=Redis cluster 1 dnsd
-After=docker.service
+After=registrator.service
 Requires=docker.service
 
 [Service]
@@ -13,9 +13,10 @@ ExecStart=/usr/bin/docker run --name ${UNIT} \
 	-e SERVICE_NAME=${UNIT} \
 	-e ETCD_PEERS=http://${COREOS_PRIVATE_IPV4}:4001 \
 	-e PUBLISH_DOMAIN=redis-1.docker \
-	-P \
+	-p ${COREOS_PRIVATE_IPV4}::8080 \
 	sheldonh/redis-dnsd
 ExecStop=/usr/bin/docker stop ${UNIT}
 
 [X-Fleet]
-MachineOf=redis-1-topology-observer.service
+# Until redis-1-topology-observer uses ambassadors or SRV records
+MachineOf=redis-1-dictator.service

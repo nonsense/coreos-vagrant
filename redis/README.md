@@ -12,9 +12,7 @@ and some services that apply a master/slave topology to the available redis inst
 
 Each redis instance is supported by three Fleet services, global to the set of hosts in the CoreOS cluster with the `hosts=redis-1` metadata.
 
-`redis-1-node-config.service` and `redis-1-node-data.service` create persistent data volume containers (DVCs) for redis config and data respectively, if these do not already exist on the host. They are `oneshot` services.
-
-`redis-1-node.service` starts a redis instance that mounts `/etc/redis` and `/data` from the DVCs. Redis instances that have not had the master/slave topology applied to them come up unconfigured, as `SLAVEOF NO ONE`, but this poses no risk of accumulating unwanted writes because they have not yet been published into DNS. The service has an `ExecStartPost` that writes to a trigger in etcd indicate that the master/slave topology should be (re-)applied. The instances expose environment variables that cause them to be registered into the CoreOS cluster's SkyDNS, using the CoreOS host's name in the `redis-1.docker` domain. Use of the CoreOS host name would not be wise in production, but it makes demonstrations more visually appealing.
+`redis-1-node.service` starts a redis instance, with data volumes containers (DVCs) for its `etc/redis` and `/data`. Redis instances that have not had the master/slave topology applied to them come up unconfigured, as `SLAVEOF NO ONE`, but this poses no risk of accumulating unwanted writes because they have not yet been published into DNS. The service has an `ExecStartPost` that writes to a trigger in etcd indicate that the master/slave topology should be (re-)applied. The instances expose environment variables that cause them to be registered into the CoreOS cluster's SkyDNS, using the CoreOS host's name in the `redis-1.docker` domain. Use of the CoreOS host name would not be wise in production, but it makes demonstrations more visually appealing.
 
 ## Master/slave topology application
 
@@ -108,6 +106,12 @@ watch fleetctl list-units
 ```
 
 Initial service startup may be slow while docker pulls images. Wait for the config and data services to reach `active/exited` state, and for the remaining services to reach `active/running` state.
+
+Now apply the defined master/slave topology:
+
+```
+sh apply-topology.sh
+```
 
 You should now be able to contact the current redis master as follows:
 

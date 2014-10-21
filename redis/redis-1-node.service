@@ -1,23 +1,32 @@
 [Unit]
 Description=Redis cluster 1 node
-After=redis-1-node-data.service
-Requires=redis-1-node-data.service
-After=redis-1-node-config.service
-Requires=redis-1-node-config.service
+After=registrator.service
+Requires=docker.service
 
 [Service]
+EnvironmentFile=/etc/environment
 Environment=UNIT=redis-1-node
 TimeoutStartSec=0
+
+ExecStartPre=/bin/sh -c '/usr/bin/docker inspect ${UNIT}-config >/dev/null 2>&1 \
+	|| /usr/bin/docker run --name ${UNIT}-config -v /etc/redis sheldonh/dvc /etc/redis:755:999:999'
+ExecStartPre=/usr/bin/docker run --rm --volumes-from ${UNIT}-config \
+	busybox /bin/sh -c 'touch /etc/redis/redis.conf && chown 999:999 /etc/redis/redis.conf'
+
+ExecStartPre=/bin/sh -c '/usr/bin/docker inspect ${UNIT}-data >/dev/null 2>&1 \
+	|| /usr/bin/docker run --name ${UNIT}-data -v /data sheldonh/dvc /data:755:999:999'
+
 ExecStartPre=-/usr/bin/docker rm -f ${UNIT}
 ExecStartPre=/usr/bin/docker pull redis
 ExecStart=/usr/bin/docker run --name ${UNIT} \
 	-e SERVICE_NAME=redis-1 \
 	-e SERVICE_ID=%H \
-	--volumes-from=redis-1-node-data \
-	--volumes-from=redis-1-node-config \
-	-P \
+	--volumes-from=${UNIT}-config \
+	--volumes-from=${UNIT}-data \
+	-p ${COREOS_PRIVATE_IPV4}::6379 \
 	redis redis-server /etc/redis/redis.conf --appendonly yes
-ExecStartPost=/usr/bin/bash -c '/usr/bin/etcdctl set /config/redis-1/topology-trigger 1'
+ExecStartPost=/usr/bin/etcdctl set /config/redis-1/topology-trigger 1
+
 ExecStop=/usr/bin/docker stop ${UNIT}
 
 [X-Fleet]
