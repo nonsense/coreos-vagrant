@@ -1,22 +1,15 @@
+require 'resolv'
+require 'securerandom'
+
 require 'rubygems'
 require 'redis'
-require 'securerandom'
-require 'net/dns'
 
 def get_redis
-  r = Net::DNS::Resolver.new(searchlist: ["docker"],
-                             nameservers: [IPAddr.new("172.17.8.101"), IPAddr.new("172.17.8.102"), IPAddr.new("172.17.8.103")])
-  service = 'redis-1'
-  candidates = r.search(service).elements.map { |a| {host: a.value, port: 6379} }
-  candidates.each do |c|
-    r = Redis.new(c)
-    if r.info['role'] == 'master'
-      return r
-    else
-      r.quit
-    end
-  end
-  nil
+  resolv = Resolv::DNS.new(nameserver: %{172.17.8.101 172.17.8.102 172.17.8.103}, search: ["docker"])
+  service = 'master.redis-1'
+  master = resolv.getresource(service, Resolv::DNS::Resource::IN::SRV)
+  c = {host: resolv.getaddress(master.target).to_s, port: master.port}
+  Redis.new(c).tap { |x| x.info }
 end
 
 redis = get_redis
