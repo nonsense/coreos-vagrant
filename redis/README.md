@@ -113,8 +113,43 @@ Now apply the defined master/slave topology:
 sh apply-topology.sh
 ```
 
+### Simple redis shell
+
 You should now be able to contact the current redis master wherever it is with:
 
 ```
 sh redis-cli.sh
 ```
+
+This is a good way to check that all the components are interoperating, before testing that master/slave topology changes are lossless.
+
+### Error 
+
+A demonstration of lossless master/slave topology change can now be run. It's easiest to do this in two terminals:
+
+```
+# Terminal 1
+cd redis-counter
+rvm use . --create
+bundle
+COUNTER_CLEAR=1 COUNTER_COUNT=10000 COUNTER_INTERVAL=6 ruby counter.rb
+```
+
+```
+# Terminal 2
+sh mess-with-cluster.sh
+```
+
+The `counter.rb` process in terminal 1 will occasionally print error messages, as it attempts to write during topology changes.
+When it is finished, it should print output like this:
+
+```
+ack'd: 9882 (0 missing) err'd: 118 (0 phantom)
+
+```
+
+Errors are to be expected. What is important is that there should be 0 missing and 0 phantom.
+_Missing acks_ are bad; those are writes that were acknowledged by the master, but later found missing the final tally.
+They indicate a hardware or network failure during topology change, or that the topology change algorithm is flawed.
+_Phantom errors_ are bad; those are writes that the client considered as errors, and yet they made it into the final tally.
+They indicate that [the consensus problem](http://en.wikipedia.org/wiki/Consensus_%28computer_science%29#Problem_description) is hard to solve.

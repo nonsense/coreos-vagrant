@@ -2,7 +2,7 @@
 
 hosts="core-01.redis-1.docker core-02.redis-1.docker core-03.redis-1.docker"
 
-while ! read -t 0 abort; do
+while ! read -t 10 abort; do
 	master=${hosts##* }
 	slaves=${hosts% *}
 	hosts="$master $slaves"
