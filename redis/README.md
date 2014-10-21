@@ -113,18 +113,8 @@ Now apply the defined master/slave topology:
 sh apply-topology.sh
 ```
 
-You should now be able to contact the current redis master as follows:
+You should now be able to contact the current redis master wherever it is with:
 
 ```
-vagrant ssh 172.17.8.101 -- docker run --rm -it --link redis-1-node:redis 172.17.8.1:5000/redis redis-cli -h redis
+sh redis-cli.sh
 ```
-
-## TODO
-
-For the demo to shine, it should
-
-* fix dependency issue requiring a fleet stop/start of `redis-1-topology-observer.service` on first deploy,
-* set up `master.redis-1.docker` and `slaves.redis-1.docker` in SkyDNS, and
-* show how to connect to the redis master without `vagrant ssh`,
-* show how to connect to the redis master on an ephemeral port,
-* make the local registry mirror optional.
