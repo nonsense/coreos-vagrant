@@ -3,3 +3,4 @@ log/
 config.rb
 core-*-user-data
 user-data.erb
+redis/topology.json
